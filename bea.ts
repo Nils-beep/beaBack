@@ -4,79 +4,79 @@ import fsExists from 'fs.promises.exists';
 import lineReader from 'line-reader';
 import readlineSync from 'readline-sync'
 
-const dirPath = './have fun spanier';
+const beadirPath = './have fun spanier';
 const prevBeasFilePath = "./previousBeas.txt";
 
 let prevBeas = Array();
 
-if (await fsExists("./previousBeas.txt")){
-  const fileContent = await fs.readFile(prevBeasFilePath, 'utf-8');
-  const lines = fileContent.split('\n');
-  for (const line of lines)
-    if (line != "")
-      prevBeas.push(line);
+if (await fsExists(prevBeasFilePath)){
+  const beaFileContent = await fs.readFile(prevBeasFilePath, 'utf-8');
+  const beaLines = beaFileContent.split('\n');
+  for (const beaLine of beaLines)
+    if (beaLine != "")
+      prevBeas.push(beaLine);
 }
 
 console.log(prevBeas);
-let imagePath: string = await chooseToBea();
-console.log(imagePath);
+let beaImagePath: string = await chooseToBea();
+console.log(beaImagePath);
 await fs.writeFile("previousBeas.txt", "");
 for (let i = 0; i < prevBeas.length; i++)
   fs.appendFile(prevBeasFilePath, prevBeas[i].toString()+"\n");
 
 
 async function chooseToBea():Promise<string>{
-  let folders = await fs.readdir(dirPath);
-  folders.sort();
-  let imageNumber: number = 0;
-  let imageAmount: number = await getBeaAmount(folders);
+  let beaFolders = await fs.readdir(beadirPath);
+  beaFolders.sort();
+  let beaImageNumber: number = 0;
+  let beaImageAmount: number = await getBeaAmount(beaFolders);
   console.log("2nd to last");
-  imageNumber = await findNewBeaNumber(imageAmount);
+  beaImageNumber = await findNewBeaNumber(beaImageAmount);
   if (prevBeas.length < 10)
-    prevBeas[prevBeas.length] = imageNumber;
+    prevBeas[prevBeas.length] = beaImageNumber;
   else {
     prevBeas.pop();
-    prevBeas.unshift(imageNumber);
+    prevBeas.unshift(beaImageNumber);
   }
   console.log("its the last");
-  return await getBeaFilePath(folders, imageNumber);
+  return await getBeaFilePath(beaFolders, beaImageNumber);
 }
 
-async function getBeaFilePath(folders: string[], imageNumber: number): Promise<string>{
-  let imagePath: string = "";
-  for (let i = 0; i < folders.length; i++){
-    let folder = await fs.readdir(dirPath + "/" + folders[i]);
-    if (((imageNumber - folder.length) <= 0)) {
-      imagePath = dirPath + "/" + folders[i] + "/" + folder[imageNumber-1];
+async function getBeaFilePath(beaFolders: string[], beaImageNumber: number): Promise<string>{
+  let beaImagePath: string = "";
+  for (let i = 0; i < beaFolders.length; i++){
+    let beaFolder = await fs.readdir(beadirPath + "/" + beaFolders[i]);
+    if (((beaImageNumber - beaFolder.length) <= 0)) {
+      beaImagePath = beadirPath + "/" + beaFolders[i] + "/" + beaFolder[beaImageNumber-1];
       break;
     }
-    imageNumber -= folder.length;
+    beaImageNumber -= beaFolder.length;
   }
-  return imagePath;
+  return beaImagePath;
 }
 
-async function findNewBeaNumber(imageAmount:number): Promise<number>{
-  let newNumberFound: boolean = false;
-  let imageNumber: number = 0;
-  while (!newNumberFound) {
-    imageNumber = getRandomBeaint(1, imageAmount);
-    newNumberFound = true;
+async function findNewBeaNumber(beaImageAmount:number): Promise<number>{
+  let beawNumberFound: boolean = false;
+  let beaImageNumber: number = 0;
+  while (!beawNumberFound) {
+    beaImageNumber = getRandomBeaint(1, beaImageAmount);
+    beawNumberFound = true;
     for (let i = 0; i < prevBeas.length; i++){
-      if (imageNumber == prevBeas[i]) {
-        newNumberFound = false
+      if (beaImageNumber == prevBeas[i]) {
+        beawNumberFound = false
         break;
       }
     }
   }
-  return imageNumber;
+  return beaImageNumber;
 }
 
-async function getBeaAmount(folders: string[]): Promise<number>{
+async function getBeaAmount(beaFolders: string[]): Promise<number>{
   let beaImageAmount: number = 0;
-  for (let i = 0; i < folders.length; i++){
-    let folder = await fs.readdir(dirPath + "/" + folders[i]);
+  for (let i = 0; i < beaFolders.length; i++){
+    let beaFolder = await fs.readdir(beadirPath + "/" + beaFolders[i]);
     //imageAmountPerFolder.push(folder.length);
-    beaImageAmount += folder.length;
+    beaImageAmount += beaFolder.length;
   }
   return beaImageAmount;
 }
