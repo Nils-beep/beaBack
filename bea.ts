@@ -26,17 +26,36 @@ for (let i = 0; i < prevBeas.length; i++)
 
 
 async function chooseToBea():Promise<string>{
-  let imagePath: string = '';
   let folders = await fs.readdir(dirPath);
-  let imageAmountPerFolder = new Array();
-  let imageAmount: number = 0;
+  folders.sort();
+  let imageNumber: number = 0;
+  let imageAmount: number = await getBeaAmount(folders);
+  console.log("2nd to last");
+  imageNumber = await findNewBeaNumber(imageAmount);
+  if (prevBeas.length < 10)
+    prevBeas[prevBeas.length] = imageNumber;
+  else {
+    prevBeas.pop();
+    prevBeas.unshift(imageNumber);
+  }
+  console.log("its the last");
+  return await getBeaFilePath(folders, imageNumber);
+}
+
+async function getBeaFilePath(folders: string[], imageNumber: number): Promise<string>{
+  let imagePath: string = "";
   for (let i = 0; i < folders.length; i++){
     let folder = await fs.readdir(dirPath + "/" + folders[i]);
-    imageAmountPerFolder.push(folder.length);
-    imageAmount += folder.length;
+    if (((imageNumber - folder.length) <= 0)) {
+      imagePath = dirPath + "/" + folders[i] + "/" + folder[imageNumber-1];
+      break;
+    }
+    imageNumber -= folder.length;
   }
+  return imagePath;
+}
 
-  folders.sort();
+async function findNewBeaNumber(imageAmount:number): Promise<number>{
   let newNumberFound: boolean = false;
   let imageNumber: number = 0;
   while (!newNumberFound) {
@@ -49,19 +68,18 @@ async function chooseToBea():Promise<string>{
       }
     }
   }
-  prevBeas[prevBeas.length] = imageNumber;
-  //fs.appendFile(prevBeasFilePath, imageNumber.toString()+"\n");
-  for (let i = 0; i < folders.length; i++){
-    let folder = await fs.readdir(dirPath + "/" + folders[i]);
-    if (((imageNumber - folder.length) <= 0)) {
-      imagePath = dirPath + "/" + folders[i] + "/" + folder[imageNumber-1];
-      break;
-    }
-    imageNumber -= folder.length;
-  }
-  return imagePath;
+  return imageNumber;
 }
 
+async function getBeaAmount(folders: string[]): Promise<number>{
+  let beaImageAmount: number = 0;
+  for (let i = 0; i < folders.length; i++){
+    let folder = await fs.readdir(dirPath + "/" + folders[i]);
+    //imageAmountPerFolder.push(folder.length);
+    beaImageAmount += folder.length;
+  }
+  return beaImageAmount;
+}
 
 function getRandomBeaint(min:number, max:number) {
     min = Math.ceil(min);
