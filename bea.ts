@@ -1,9 +1,13 @@
+//edge case? what if the generator pulls image with id on the 10th spot
+// it gets pushed out but the program crashes, now it reloads and the seed puts in the new first timezone
+// actually maybe nvm because date didnt change
+
+
 import fs from 'fs/promises';
-import path from 'path';
 import fsExists from 'fs.promises.exists';
-import lineReader from 'line-reader';
-import readlineSync from 'readline-sync'
 import seedrandom from 'seedrandom';
+import crypto from 'crypto';
+import sharp from 'sharp';
 
 const beadirPath = './have fun spanier';
 const prevBeasFilePath = "./previousBeas.txt";
@@ -13,72 +17,92 @@ const beaGenerator = seedrandom(beaDate);
 let prevBeas = Array();
 let savedBeaDate = await fs.readFile("./lastBeaDate", 'utf-8');
 let beaFolders = await fs.readdir(beadirPath);
+let beaImagePath: string = "";
+let beaImageName: string = "";
 beaFolders.sort();
 
-if (await fsExists(prevBeasFilePath)){
+if (await fsExists(prevBeasFilePath)) {
   const beaFileContent = await fs.readFile(prevBeasFilePath, 'utf-8');
   const beaLines = beaFileContent.split('\n');
+  let hasDate: boolean = false;
   for (const beaLine of beaLines)
-    if (beaLine != "")
-      prevBeas.push(beaLine);
+    if (beaLine != "") {
+      if (!hasDate){
+        savedBeaDate = beaLine;
+        hasDate = true;
+      }
+        else prevBeas.push(beaLine);
+    }
 }
 
 console.log(prevBeas);
 
 if (savedBeaDate != beaDate) {
-  let beaImagePath: string = await chooseToBea();
-  console.log(beaImagePath);
-  await fs.writeFile("previousBeas.txt", "");
-  for (let i = 0; i < prevBeas.length; i++)
-    fs.appendFile(prevBeasFilePath, prevBeas[i].toString() + "\n");
-  fs.writeFile("lastBeaDate", beaDate);
+  beaImageName = await chooseToBea();
+  const beaFileContent = beaDate + "\n" + prevBeas.join("\n") + "\n";
+  await fs.writeFile("previousBeas.txt", beaFileContent);
+} else {
+  beaImageName = prevBeas[0];
 }
+beaImagePath = beadirPath + "/" + beaImageName;
+
 console.log(savedBeaDate);
 console.log(beaDate);
+console.log(beaImagePath);
+console.log(beaImageName);
+console.log(crypto.createHash('md5').update(beaImageName).digest('hex'));
+let image = await loadBeaImage(beaImagePath);
 
 
-async function chooseToBea():Promise<string>{
-  let beaImageNumber: number = 0;
-  let beaImageAmount: number = await getBeaAmount(beaFolders);
-  console.log("2nd to last");
-  beaImageNumber = await findNewBeaNumber(beaImageAmount);
-  if (prevBeas.length < 10)
-    prevBeas[prevBeas.length] = beaImageNumber;
-  else {
-    prevBeas.pop();
-    prevBeas.unshift(beaImageNumber);
+async function loadBeaImage(beaPath: string) {
+  try {
+    const beaImage = await sharp(beaPath).toBuffer();
+    return beaImage;
+  } catch (error) {
+    console.error("buh");
   }
-  console.log("its the last");
-  return await getBeaFilePath(beaFolders, beaImageNumber);
 }
 
-async function getBeaFilePath(beaFolders: string[], beaImageNumber: number): Promise<string>{
-  let beaImagePath: string = "";
+async function chooseToBea():Promise<string>{
+  let beaImageAmount: number = await getBeaAmount(beaFolders);
+  let beaName = await findNewBea(beaImageAmount);
+  console.log(beaName);
+  prevBeas.unshift(beaName);
+  if (prevBeas.length > 10)
+    prevBeas.pop();
+  return beaName;
+}
+
+async function getBeaFileName(beaFolders: string[], beaImageNumber: number): Promise<string>{
+  let beaFileName:string = "";
   for (let i = 0; i < beaFolders.length; i++){
     let beaFolder = await fs.readdir(beadirPath + "/" + beaFolders[i]);
     if (((beaImageNumber - beaFolder.length) <= 0)) {
-      beaImagePath = beadirPath + "/" + beaFolders[i] + "/" + beaFolder[beaImageNumber-1];
+      beaFileName = beaFolders[i] + "/" + beaFolder[beaImageNumber - 1];
       break;
     }
     beaImageNumber -= beaFolder.length;
   }
-  return beaImagePath;
+
+  return beaFileName;
 }
 
-async function findNewBeaNumber(beaImageAmount:number): Promise<number>{
-  let beawNumberFound: boolean = false;
-  let beaImageNumber: number = 0;
-  while (!beawNumberFound) {
-    beaImageNumber = getRandomBeaint(1, beaImageAmount);
-    beawNumberFound = true;
+async function findNewBea (beaImageAmount:number): Promise<string>{
+  let beaFound: boolean = false;
+  let beaImageNumber: number = getRandomBeaint(1, beaImageAmount);
+  let beaFileName = await getBeaFileName(beaFolders, beaImageNumber);
+  while (!beaFound) {
+    beaFound = true;
     for (let i = 0; i < prevBeas.length; i++){
-      if (beaImageNumber == prevBeas[i]) {
-        beawNumberFound = false
+      beaFileName = await getBeaFileName(beaFolders, beaImageNumber);
+      if (beaFileName == prevBeas[i]) {
+        beaFound = false
+        beaImageNumber = getRandomBeaint(1, beaImageAmount);
         break;
       }
     }
   }
-  return beaImageNumber;
+  return beaFileName;
 }
 
 async function getBeaAmount(beaFolders: string[]): Promise<number>{
