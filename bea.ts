@@ -3,11 +3,17 @@ import path from 'path';
 import fsExists from 'fs.promises.exists';
 import lineReader from 'line-reader';
 import readlineSync from 'readline-sync'
+import seedrandom from 'seedrandom';
 
 const beadirPath = './have fun spanier';
 const prevBeasFilePath = "./previousBeas.txt";
+const beaDate = new Date().toISOString().split('T')[0] //timezone of user?!
+const beaGenerator = seedrandom(beaDate);
 
 let prevBeas = Array();
+let savedBeaDate = await fs.readFile("./lastBeaDate", 'utf-8');
+let beaFolders = await fs.readdir(beadirPath);
+beaFolders.sort();
 
 if (await fsExists(prevBeasFilePath)){
   const beaFileContent = await fs.readFile(prevBeasFilePath, 'utf-8');
@@ -18,16 +24,20 @@ if (await fsExists(prevBeasFilePath)){
 }
 
 console.log(prevBeas);
-let beaImagePath: string = await chooseToBea();
-console.log(beaImagePath);
-await fs.writeFile("previousBeas.txt", "");
-for (let i = 0; i < prevBeas.length; i++)
-  fs.appendFile(prevBeasFilePath, prevBeas[i].toString()+"\n");
+
+if (savedBeaDate != beaDate) {
+  let beaImagePath: string = await chooseToBea();
+  console.log(beaImagePath);
+  await fs.writeFile("previousBeas.txt", "");
+  for (let i = 0; i < prevBeas.length; i++)
+    fs.appendFile(prevBeasFilePath, prevBeas[i].toString() + "\n");
+  fs.writeFile("lastBeaDate", beaDate);
+}
+console.log(savedBeaDate);
+console.log(beaDate);
 
 
 async function chooseToBea():Promise<string>{
-  let beaFolders = await fs.readdir(beadirPath);
-  beaFolders.sort();
   let beaImageNumber: number = 0;
   let beaImageAmount: number = await getBeaAmount(beaFolders);
   console.log("2nd to last");
@@ -81,8 +91,8 @@ async function getBeaAmount(beaFolders: string[]): Promise<number>{
   return beaImageAmount;
 }
 
-function getRandomBeaint(min:number, max:number) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+function getRandomBeaint(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(beaGenerator() * (max - min + 1)) + min;
 }
