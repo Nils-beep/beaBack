@@ -1,6 +1,7 @@
 {
   "type": "module",
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/line-reader": "^0.0.37",
     "@types/node": "^26.6.4",
     "@types/readline-sync": "^1.4.8",
@@ -8,6 +9,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "express": "^5.2.1",
     "fs": "^0.0.1-security",
     "fs.promises.exists": "^1.1.4",
     "line-reader": "^0.4.0",

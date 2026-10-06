@@ -8,11 +8,14 @@ import fsExists from 'fs.promises.exists';
 import seedrandom from 'seedrandom';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import express from 'express';
+import path from "path";
 
 const beadirPath = './have fun spanier';
 const prevBeasFilePath = "./previousBeas.txt";
 const beaDate = new Date().toISOString().split('T')[0] //timezone of user?!
 const beaGenerator = seedrandom(beaDate);
+const beaExpress = express();
 
 let prevBeas = Array();
 let savedBeaDate = "";
@@ -46,12 +49,29 @@ if (savedBeaDate != beaDate) {
 }
 beaImagePath = beadirPath + "/" + beaImageName;
 
+const beaxtension = path.extname(beaImageName);
+
 console.log(savedBeaDate);
 console.log(beaDate);
 console.log(beaImagePath);
 console.log(beaImageName);
-console.log(crypto.createHash('md5').update(beaImageName).digest('hex'));
-let image = await loadBeaImage(beaImagePath);
+const beaHash = crypto.createHash('md5').update(beaImageName).digest('hex');
+let beaImage = await loadBeaImage(beaImagePath);
+
+beaExpress.get("/api/bea", (req, res) => {
+  res.json({
+    beaHash,
+    beaImageUrl: "/api/bea/'${ hash }${ beaxtension}"
+  });
+});
+
+beaExpress.get("/api/bea/%{beaHash}{beaxtension}", (req, res) => {
+  res.type(beaxtension);
+  res.setHeader("idk", 'inline; filename="${beaHash}${beaxtension}"');
+  res.send(beaImage);
+});
+
+
 
 
 async function loadBeaImage(beaPath: string) {
