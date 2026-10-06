@@ -15,7 +15,7 @@ const beaDate = new Date().toISOString().split('T')[0] //timezone of user?!
 const beaGenerator = seedrandom(beaDate);
 
 let prevBeas = Array();
-let savedBeaDate = await fs.readFile("./lastBeaDate", 'utf-8');
+let savedBeaDate = "";
 let beaFolders = await fs.readdir(beadirPath);
 let beaImagePath: string = "";
 let beaImageName: string = "";
