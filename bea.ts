@@ -40,15 +40,26 @@ if (await fsExists(prevBeasFilePath)) {
 	}
 }
 
-if (true/*savedBeaDate !== beaDate*/) {
+if (savedBeaDate !== beaDate) {
   beaImageName = await getTheBea();
   console.log(beaImageName);
 	const beaFileContent = `${beaDate}\n${prevBeas.join("\n")}\n`;
 	await fs.writeFile("previousBeas.txt", beaFileContent);
 }
 else beaImageName = prevBeas[0] + "";
+beaImagePath = `${beadirPath}/${beaImageName}`;
 
+const beaxtension = path.extname(beaImageName);
 
+beaExpress.get("/api/bea", (_req, res) => {
+	res.json({ beaImagePath });
+});
+
+beaExpress.get("/api/bea/%{beaHash}{beaxtension}", (_req, res) => {
+	//res.type(beaxtension);
+	res.setHeader("idk", `inline; filename="${beaImagePath}${beaxtension}"`);
+	res.send(beaImagePath);
+});
 
 async function getTheBea(): Promise<string> {
   await loadBeasInArray();
@@ -56,9 +67,9 @@ async function getTheBea(): Promise<string> {
   let returnValue: string = "";
   if (allNewBeaFiles.length > 0) {
     index = getRandomBeaint(0, allNewBeaFiles.length - 1);
-    let newName = allNewBeaFiles[index].replace("new_", "")
-    //await fs.rename(beadirPath + "/" + allNewBeaFiles[index], beadirPath + "/" + newName);              THIS RENAMES THE FILE SO IT WONT BE NEW ANYMORE
-    
+    returnValue = allNewBeaFiles[index].replace("new_", "")
+    await fs.rename(beadirPath + "/" + allNewBeaFiles[index], beadirPath + "/" + returnValue);              //THIS RENAMES THE FILE SO IT WONT BE NEW ANYMORE
+
   } else {
     let found: boolean = false;
     while (!found) {
@@ -70,8 +81,9 @@ async function getTheBea(): Promise<string> {
           break;
         }
     }
+    returnValue = allOldBeaFiles[index];
   }
-  return allOldBeaFiles[index];
+  return returnValue;
 }
 
 async function loadBeasInArray() {
@@ -92,3 +104,7 @@ function getRandomBeaint(min: number, max: number) {
 	max = Math.floor(max);
 	return Math.floor(beaGenerator() * (max - min + 1)) + min;
 }
+
+beaExpress.listen(3000, () => {
+	console.log("http://localhost:3000");
+});
